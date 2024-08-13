@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% load static %}
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.5.3/cerulean/bootstrap.min.css"
+    integrity="sha512-dQLT/B7byn2LjN/DN4zeBKpwGV6qbidV0XiMRWQOL7TGrV7FkZFldkGG+DGMU+CQnMTcRZlUI7GMWt1j6akNew=="
+    crossorigin="anonymous" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>
+  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />
+  <title>Weather App</title>
+</head>
+
+<body>
+  <div class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
+    <div class="container">
+      <a href="{% url 'index' %}" class="navbar-brand">Weather App <span style="color: rgb(12, 133, 239);"> <strong> - Django Framework</strong></span></a>
+      <div class="collapse navbar-collapse">
+        {% if user.is_authenticated %}
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+          </li>
+          {% endif %}
+        </ul>
+
+        <ul class="navbar-nav ml-auto">
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'login' %}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'signup' %}">Signup</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <br /><br /> <br>
+  <div id="jumbotron" class="jumbotron" style="text-align: center; margin-top:50px">
+    <h1 class="display-5">Weather App</h1>
+    <h5>Using Openweathermap API and Django Framework</h5>
+    <img src="{% static 'images/weather.png' %}" class="image" style="width:100px; margin-bottom:-50px;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <form method="post">
+    {% csrf_token %}
+    <input type="text" name="city" id="tags" placeholder="Choose Your City ..." required>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+{% if weather_data %}
+  <div class="card text-black bg-light mb-6">
+      <h4 id="city_name" style="color: black;"><span class="badge badge-primary">City:</span> {{ weather_data.city }}</h4>
+      <h4 id="temperature" style="color: black;"><span class="badge badge-primary">Temperature:</span> {{ weather_data.temperature }}°C</h4>
+      <h4 id="description" style="color: black;"><span class="badge badge-primary">Description:</span> {{ weather_data.description }}</h4>
+      <img src="http://openweathermap.org/img/w/{{ weather_data.icon }}.png" alt="{{ weather_data.description }}">
+
+      
+  </div>
+{% endif %}
+
+    <script>
+    button = document.getElementById("get-data");
+    button.addEventListener("click", getWeatherData);
+
+function getWeatherData(e) {
+  const newXHRRequest = new XMLHttpRequest();
+  const name_input = document.getElementById("tags").value;
+
+  newXHRRequest.open(
+    "GET",
+    'https://api.openweathermap.org/data/2.5/weather?q='+ name_input + '&units=metric&APPID=3eb3e2e6a06817b3e14b2862ef367bac',
+    true
+  );
+
+  newXHRRequest.onload = function () {
+    if (this.status === 200) {
+      const weather_data = JSON.parse(this.responseText);
+      var output = weather_data;
+    }
+    else {
+        output = "No data";
+      }
+      console.log(output)
+
+      document.getElementById("response_list").innerHTML = `<h4 id="city_name"><span class="badge badge-primary" id="span_name" >Name of City :</span> ${output.name}</h4>
+        <h4 id="country_code"><span class="badge badge-primary">Country Code :</span> ${output.sys.country} </h4>
+        <h4 id ="coordinates"><span class="badge badge-primary">Coordinates [ longitude, latitude ] :</span> ${output.coord.lon }, ${ output.coord.lat}</h4>
+        <h4 id="temperature"><span class="badge badge-primary">Temperature in Celsius :</span> ${output.main.temp}</h4>
+        <h4 id="pressure"><span class="badge badge-primary">Pressure :</span> ${ output.main.pressure} hPa </h4>
+        <h4 id="timezone"><span class="badge badge-primary">Timezone :</span> ${output.timezone /3600}hr(s) away from UTC</h4>
+
+
+        <h4 id="humidity"><span class="badge badge-primary">Humidity : </span> ${output.main.humidity}%</h4>
+        <h4 id="forcast"><span class="badge badge-primary">Forecast : </span>  <img
+            src="http://openweathermap.org/img/w/${output['weather']['0']['icon']}.png" alt="Image" style="width:70px"></h4>
+        <h4 id="description"><span class="badge badge-primary">Description : </span> ${output['weather']['0']['description']} </h4>
+`;
+  };
+
+  newXHRRequest.send();
+
+  e.preventDefault();
+
+
+}
+        /*const name = document.getElementById("tags")
+         document.getElementById("search_form").addEventListener("submit", async event => {
+                event.preventDefault();
+
+                const name_input = (document.getElementById("tags")).value;
+                    fetch('https://api.openweathermap.org/data/2.5/weather?q='+ name_input + '&units=metric&APPID=3eb3e2e6a06817b3e14b2862ef367bac')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("city_name").innerHTML = data.name;
+                        document.getElementById("country_code").innerHTML = data.sys.country;
+                        document.getElementById("coordinates").innerHTML = (data.coord.lon , data.coord.lat);
+                        document.getElementById("temperature").innerHTML = data.main.temp;
+                        document.getElementById("pressure").innerHTML = data.main.pressure;
+                        document.getElementById("timezone").innerHTML = data.timezone /3600;
+                        document.getElementById("humidity").innerHTML = data.main.humidity;
+
+
+                    })
+                    .catch(error => console.error(error));
+                })*/
+
+
+
+  </script>
+
+</body>
+
+</html>
