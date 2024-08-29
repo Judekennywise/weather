@@ -18,7 +18,7 @@ git clone https://github.com/Judekennywise/weatherproject.git
 Enter the project directory 
 
 ```
-cd weatherproject
+cd weather
 ```
 
 Create a virtual env
